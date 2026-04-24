@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Demográfico del DMQ</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <h1>Atlas Demográfico del DMQ</h1>
+            <p>Dinámica Poblacional 2010 - 2035 (Censos y Proyecciones)</p>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <label for="year-select">Año:</label>
+                <select id="year-select">
+                    <option value="2010">2010 (Censo)</option>
+                    <option value="2022" selected>2022 (Censo)</option>
+                    <option value="2025">2025 (Proyección)</option>
+                    <option value="2030">2030 (Proyección)</option>
+                    <option value="2035">2035 (Proyección)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="type-filter">Área:</label>
+                <select id="type-filter">
+                    <option value="all">Todas</option>
+                    <option value="Urbana">Urbanas</option>
+                    <option value="Rural">Rurales</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- KPIs -->
+        <section class="kpis">
+            <div class="kpi-card">
+                <h3>Población Total</h3>
+                <div class="kpi-value" id="kpi-population">-</div>
+                <div class="kpi-subtitle">Año seleccionado</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Crecimiento Absoluto</h3>
+                <div class="kpi-value" id="kpi-growth-abs">-</div>
+                <div class="kpi-subtitle">2010 a 2022</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Crecimiento Relativo</h3>
+                <div class="kpi-value" id="kpi-growth-pct">-</div>
+                <div class="kpi-subtitle">2010 a 2022</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Tasa de Crecimiento (TCAC)</h3>
+                <div class="kpi-value highlight" id="kpi-tcac">-</div>
+                <div class="kpi-subtitle">Anual (2010-2022)</div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <!-- Map Section -->
+            <section class="map-container">
+                <div class="section-header">
+                    <h2>Distribución Poblacional</h2>
+                    <div class="map-controls">
+                        <select id="map-variable">
+                            <option value="population">Población Total</option>
+                            <option value="tcac">TCAC (%)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="map"></div>
+                <div class="map-legend" id="map-legend"></div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-container">
+                <div class="chart-card">
+                    <h2>Top Parroquias</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h2>Evolución Poblacional</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h2 id="pyramid-title">Pirámide Poblacional</h2>
+                    <div class="chart-wrapper pyramid-wrapper">
+                        <canvas id="pyramidChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Data Table Section -->
+        <section class="table-container">
+            <div class="section-header">
+                <h2>Datos Detallados por Parroquia</h2>
+                <input type="text" id="table-search" placeholder="Buscar parroquia...">
+            </div>
+            <div class="table-wrapper">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="name">Parroquia <span>↕</span></th>
+                            <th data-sort="type">Tipo <span>↕</span></th>
+                            <th data-sort="p2010">2010 <span>↕</span></th>
+                            <th data-sort="p2022">2022 <span>↕</span></th>
+                            <th data-sort="tcac">TCAC % <span>↕</span></th>
+                            <th data-sort="p2025">2025* <span>↕</span></th>
+                            <th data-sort="p2030">2030* <span>↕</span></th>
+                            <th data-sort="p2035">2035* <span>↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Fuentes: Censos de Población 2010 y 2022 - INEC. Proyecciones elaboradas mediante el método de componentes por cohorte con TCAC intercensal.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="data.js"></script>
+    <script src="geo_data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
