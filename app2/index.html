@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecciones Demográficas del DMQ (v2)</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <h1>Proyecciones Demográficas del DMQ (Metodología V2)</h1>
+            <p>Datos desagregados por sexo y grupo de edad (2010 - 2035)</p>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <label for="sex-filter">Población:</label>
+                <select id="sex-filter">
+                    <option value="total">Ambos Sexos</option>
+                    <option value="male">Hombres</option>
+                    <option value="female">Mujeres</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="year-select">Año Proyección:</label>
+                <select id="year-select">
+                    <option value="2010">2010 (Censo)</option>
+                    <option value="2022" selected>2022 (Censo)</option>
+                    <option value="2025">2025 (Proyectado)</option>
+                    <option value="2030">2030 (Proyectado)</option>
+                    <option value="2035">2035 (Proyectado)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- Parroquia Selector / Adjustments -->
+        <section class="scenario-panel">
+            <h2>Simulador de Escenarios por Parroquia</h2>
+            <div class="scenario-controls">
+                <div class="control-group">
+                    <label for="parish-select">Seleccionar Parroquia:</label>
+                    <select id="parish-select">
+                        <option value="all">Todas las Parroquias (Resumen DMQ)</option>
+                        <!-- Options filled by JS -->
+                    </select>
+                </div>
+                <div class="control-group" id="tcac-adjust-group" style="display: none;">
+                    <label for="tcac-slider">Ajuste de TCAC Base (<span id="tcac-val">0</span>%):</label>
+                    <input type="range" id="tcac-slider" min="-5" max="10" step="0.1" value="0">
+                    <span class="help-text">Modifica la tasa para ver escenarios proyectados.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPIs -->
+        <section class="kpis">
+            <div class="kpi-card">
+                <h3>Población (Año Sel.)</h3>
+                <div class="kpi-value highlight" id="kpi-population">-</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Cambio Anual Promedio</h3>
+                <div class="kpi-value" id="kpi-annual-change">-</div>
+                <div class="kpi-subtitle">Personas / año (desde 2022)</div>
+            </div>
+            <div class="kpi-card">
+                <h3>TCAC Aplicada</h3>
+                <div class="kpi-value" id="kpi-tcac">-</div>
+                <div class="kpi-subtitle">% Anual</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Exportar Datos</h3>
+                <button id="btn-export" class="export-btn">⬇ Descargar CSV</button>
+            </div>
+            <div class="kpi-card">
+                <h3>Índice de Dependencia</h3>
+                <div class="kpi-value highlight" id="kpi-aging">-</div>
+                <div class="kpi-subtitle">Dependientes por c/100 activos</div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <!-- Map Section -->
+            <section class="map-container">
+                <div class="section-header">
+                    <h2>Distribución Territorial</h2>
+                </div>
+                <div id="map"></div>
+                <div class="map-legend" id="map-legend"></div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-container">
+                <div class="chart-card">
+                    <h2>Top Parroquias (Año Sel.)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h2>Evolución Poblacional</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h2 id="pyramid-title">Pirámide Poblacional (2022)</h2>
+                    <div class="chart-wrapper pyramid-wrapper">
+                        <canvas id="pyramidChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Data Table Section -->
+        <section class="table-container">
+            <div class="section-header">
+                <h2>Datos Detallados por Parroquia (Proyección TCAC)</h2>
+                <input type="text" id="table-search" placeholder="Buscar parroquia...">
+            </div>
+            <div class="table-wrapper">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="name">Parroquia <span>↕</span></th>
+                            <th data-sort="p2010">2010 <span>↕</span></th>
+                            <th data-sort="p2022">2022 <span>↕</span></th>
+                            <th data-sort="tcac">TCAC % <span>↕</span></th>
+                            <th data-sort="p2025">2025* <span>↕</span></th>
+                            <th data-sort="p2030">2030* <span>↕</span></th>
+                            <th data-sort="p2035">2035* <span>↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="data.js"></script>
+    <script src="geo_data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

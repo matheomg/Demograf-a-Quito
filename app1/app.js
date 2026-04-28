@@ -289,7 +289,7 @@ function initCharts() {
             maintainAspectRatio: false,
             scales: {
                 x: { stacked: true, grid: { color: COLORS.grid }, ticks: { callback: v => Math.abs(v) } },
-                y: { stacked: true, grid: { display: false } }
+                y: { stacked: true, reverse: true, grid: { display: false } }
             },
             plugins: {
                 tooltip: {
